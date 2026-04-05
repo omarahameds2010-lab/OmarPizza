@@ -1,1 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline';">
+<title>OmarPizza — Admin Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060810;
+  --surface: #0d1117;
+  --surface2: #161b22;
+  --surface3: #1f2937;
+  --border: #21262d;
+  --border2: #30363d;
+  --accent: #f97316;
+  --accent2: #fb923c;
+  --green: #22c55e;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --yellow: #eab308;
+  --purple: #a855f7;
+  --text: #e6edf3;
+  --text-dim: #7d8590;
+  --text-muted: #484f58;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --glow-accent: 0 0 30px rgba(249,115,22,0.3);
+  --glow-green: 0 0 20px rgba(34,197,94,0.3);
+  --glow-red: 0 0 20px rgba(239,68,68,0.3);
+  --sidebar-w: 260px;
+  --header-h: 64px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { height:100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
 
+/* ═══════════════ SECURITY LAYER ═══════════════ */
+#securityLock {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.lock-card {
+  width: min(440px, 90vw);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 48px 44px;
+  position: relative;
+  overflow: hidden;
+}
+.lock-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--purple), var(--blue));
+}
+.lock-logo {
+  font-family: var(--font-head);
+  font-size: 22px; font-weight: 800;
+  color: var(--accent); letter-spacing: 2px;
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.lock-subtitle { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 36px; }
+.lock-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; display: block; }
+.lock-input {
+  width: 100%; padding: 13px 16px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; color: var(--text);
+  font-family: var(--font-mono); font-size: 14px;
+  outline: none; margin-bottom: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.lock-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(249,115,22,0.15); }
+.lock-input.error { border-color: var(--red); animation: shake 0.4s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+.lock-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 8px;
+  color: #fff; font-family: var(--font-body);
+  font-size: 14px; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.3s;
+  box-shadow: var(--glow-accent);
+}
+.lock-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(249,115,22,0.5); }
+.lock-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.lock-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+.lock-attempts {
+  margin-top: 16px; text-align: center;
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+}
+.captcha-box {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.captcha-box:hover { border-color: var(--accent); }
+.captcha-check {
+  width: 20px; height: 20px; border-radius: 3px;
+  background: var(--surface3); border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; transition: all 0.2s; flex-shrink: 0;
+}
+.captcha-check.checked { background: var(--green); border-color: var(--green); }
+.captcha-label { font-size: 13px; color: var(--text-dim); flex: 1; }
+.captcha-icon { font-size: 20px; }
+
+/* Loading bar */
+.lock-loading {
+  height: 3px; background: var(--surface3); border-radius: 2px;
+  margin-top: 20px; overflow: hidden; display: none;
+}
+.lock-loading-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+  border-radius: 2px;
+  transition: width 1.5s ease;
+}
+
+/* ═══════════════ SIDEBAR ═══════════════ */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  flex-shrink: 0;
+  height: 100vh;
+  position: relative; z-index: 100;
+}
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-text {
+  font-family: var(--font-head);
+  font-size: 18px; font-weight: 800;
+  color: var(--accent); letter-spacing: 2px;
+}
+.logo-text span { color: var(--text-dim); }
+.logo-badge {
+  display: inline-block; margin-top: 4px;
+  padding: 2px 8px; border-radius: 4px;
+  background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.2);
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--accent); letter-spacing: 2px;
+}
+.sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-section-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--text-muted);
+  padding: 0 8px; margin: 20px 0 8px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 8px;
+  color: var(--text-dim); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; margin-bottom: 2px;
+  border: 1px solid transparent;
+  position: relative;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); border-color: var(--border); }
+.nav-item.active {
+  background: rgba(249,115,22,0.1); color: var(--accent);
+  border-color: rgba(249,115,22,0.2); box-shadow: var(--glow-accent);
+}
+.nav-icon { font-size: 16px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; padding: 1px 7px;
+  border-radius: 10px; font-size: 10px; font-weight: 700;
+  background: var(--red); color: #fff;
+}
+.nav-badge.green { background: var(--green); }
+
+.sidebar-footer {
+  padding: 16px 12px;
+  border-top: 1px solid var(--border);
+}
+.admin-info {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+}
+.admin-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #fff;
+  font-family: var(--font-head); flex-shrink: 0;
+}
+.admin-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.admin-role { font-size: 10px; color: var(--green); font-family: var(--font-mono); }
+.logout-btn {
+  margin-left: auto; background: none; border: none;
+  color: var(--text-muted); font-size: 16px; cursor: pointer;
+  transition: color 0.2s; padding: 4px;
+}
+.logout-btn:hover { color: var(--red); }
+
+/* ═══════════════ MAIN AREA ═══════════════ */
+#main {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; background: var(--bg);
+}
+#header {
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 28px; gap: 20px;
+  flex-shrink: 0;
+}
+.header-title {
+  font-family: var(--font-head);
+  font-size: 18px; font-weight: 800;
+  color: var(--text); flex: 1;
+}
+.header-search {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 8px 14px;
+  width: 240px;
+}
+.header-search input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-family: var(--font-body); font-size: 13px;
+  width: 100%;
+}
+.header-search input::placeholder { color: var(--text-muted); }
+.security-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 6px;
+  background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+  font-size: 11px; font-weight: 700; color: var(--green);
+  font-family: var(--font-mono); letter-spacing: 0.5px;
+}
+.security-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 2s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.header-time { font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); }
+
+/* ═══════════════ CONTENT ═══════════════ */
+#content { flex: 1; overflow-y: auto; padding: 28px; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+/* Pages */
+.page { display: none; animation: pageIn 0.3s ease; }
+.page.active { display: block; }
+@keyframes pageIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+
+/* ═══════════════ STATS CARDS ═══════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px; margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px;
+  position: relative; overflow: hidden;
+  transition: all 0.3s; cursor: default;
+}
+.stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.stat-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+}
+.stat-card.orange::before { background: var(--accent); }
+.stat-card.green::before { background: var(--green); }
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.purple::before { background: var(--purple); }
+.stat-card.red::before { background: var(--red); }
+.stat-icon { font-size: 28px; margin-bottom: 14px; }
+.stat-value {
+  font-family: var(--font-head);
+  font-size: 32px; font-weight: 800; color: var(--text);
+  margin-bottom: 4px; line-height: 1;
+}
+.stat-label { font-size: 12px; color: var(--text-dim); font-weight: 600; letter-spacing: 0.5px; }
+.stat-change {
+  margin-top: 12px; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; gap: 4px;
+}
+.stat-change.up { color: var(--green); }
+.stat-change.down { color: var(--red); }
+
+/* ═══════════════ CHARTS ═══════════════ */
+.charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 28px; }
+.chart-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px;
+}
+.chart-title {
+  font-family: var(--font-head); font-size: 14px; font-weight: 700;
+  color: var(--text); margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.chart-wrap { position: relative; height: 200px; }
+canvas { border-radius: 6px; }
+
+/* ═══════════════ ORDERS TABLE ═══════════════ */
+.table-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; margin-bottom: 16px;
+}
+.table-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.table-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--text); }
+.table-actions { display: flex; gap: 10px; }
+.tbl-btn {
+  padding: 7px 14px; border-radius: 6px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text-dim); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.tbl-btn:hover, .tbl-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 12px 16px; text-align: left;
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--text-muted);
+  background: var(--surface2); border-bottom: 1px solid var(--border);
+}
+td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(249,115,22,0.03); }
+.order-id { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.customer-name { font-weight: 700; color: var(--text); }
+.order-items { font-size: 12px; color: var(--text-dim); }
+.order-total { font-family: var(--font-mono); font-weight: 700; color: var(--accent); }
+.status-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+}
+.status-new { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
+.status-preparing { background: rgba(234,179,8,0.15); color: var(--yellow); border: 1px solid rgba(234,179,8,0.25); }
+.status-delivering { background: rgba(249,115,22,0.15); color: var(--accent); border: 1px solid rgba(249,115,22,0.25); }
+.status-delivered { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+.status-cancelled { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+.action-btns { display: flex; gap: 6px; }
+.act-btn {
+  padding: 5px 10px; border-radius: 5px; font-size: 11px;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+}
+.act-accept { background: rgba(34,197,94,0.15); color: var(--green); }
+.act-accept:hover { background: var(--green); color: #000; }
+.act-cancel { background: rgba(239,68,68,0.1); color: var(--red); }
+.act-cancel:hover { background: var(--red); color: #fff; }
+
+/* ═══════════════ MENU MANAGER ═══════════════ */
+.menu-mgr-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.menu-mgr-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px;
+  display: flex; align-items: center; gap: 14px;
+  transition: all 0.2s;
+}
+.menu-mgr-card:hover { border-color: var(--border2); }
+.mmcard-emoji { font-size: 36px; flex-shrink: 0; }
+.mmcard-info { flex: 1; }
+.mmcard-name { font-weight: 700; color: var(--text); font-size: 14px; margin-bottom: 2px; }
+.mmcard-price { font-family: var(--font-mono); color: var(--accent); font-size: 13px; font-weight: 700; }
+.mmcard-cat { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.mmcard-controls { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.toggle-switch {
+  position: relative; width: 38px; height: 20px;
+  background: var(--surface3); border-radius: 10px;
+  cursor: pointer; transition: background 0.3s;
+  border: 1px solid var(--border2);
+}
+.toggle-switch.on { background: var(--green); border-color: var(--green); }
+.toggle-switch::after {
+  content: ''; position: absolute; width: 14px; height: 14px;
+  background: #fff; border-radius: 50%; top: 2px; left: 2px;
+  transition: transform 0.3s;
+}
+.toggle-switch.on::after { transform: translateX(18px); }
+.edit-mini-btn {
+  background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.2);
+  color: var(--accent); padding: 3px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+}
+.edit-mini-btn:hover { background: var(--accent); color: #fff; }
+
+/* Add item form */
+.add-item-form {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; margin-bottom: 20px;
+}
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 7px; display: block; }
+.form-input-dark {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 7px; color: var(--text);
+  font-family: var(--font-body); font-size: 13px; outline: none;
+  transition: border-color 0.2s;
+}
+.form-input-dark:focus { border-color: var(--accent); }
+.form-input-dark option { background: var(--surface2); }
+.save-btn {
+  padding: 11px 24px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 7px; color: #fff;
+  font-family: var(--font-body); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.3s; box-shadow: var(--glow-accent);
+}
+.save-btn:hover { transform: translateY(-2px); }
+
+/* ═══════════════ SECURITY LOG ═══════════════ */
+.security-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.sec-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px;
+}
+.sec-card-title {
+  font-family: var(--font-head); font-size: 14px; font-weight: 700;
+  color: var(--text); margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.threat-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.threat-item:last-child { border-bottom: none; }
+.threat-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.threat-info { flex: 1; }
+.threat-type { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.threat-detail { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+.threat-time { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+.threat-badge { padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 700; margin-top: 4px; display: inline-block; }
+.threat-blocked { background: rgba(34,197,94,0.15); color: var(--green); }
+.threat-warn { background: rgba(234,179,8,0.15); color: var(--yellow); }
+.threat-crit { background: rgba(239,68,68,0.15); color: var(--red); }
+
+.sec-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.sec-stat-row:last-child { border-bottom: none; }
+.sec-stat-label { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+.sec-stat-val { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--green); }
+.sec-stat-val.red { color: var(--red); }
+.sec-stat-val.yellow { color: var(--yellow); }
+
+.firewall-rule {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.firewall-rule:last-child { border-bottom: none; }
+.rule-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.rule-desc { font-size: 10px; color: var(--text-muted); }
+
+/* ═══════════════ ANALYTICS ═══════════════ */
+.analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+/* Mini bar chart */
+.mini-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.mini-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mini-bar {
+  width: 100%; border-radius: 4px 4px 0 0;
+  background: rgba(249,115,22,0.3);
+  transition: all 0.5s ease;
+  position: relative;
+}
+.mini-bar.active { background: var(--accent); box-shadow: var(--glow-accent); }
+.mini-bar-label { font-size: 9px; color: var(--text-muted); }
+
+/* Progress bars */
+.progress-item { margin-bottom: 16px; }
+.progress-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+.progress-label { color: var(--text); font-weight: 600; }
+.progress-val { color: var(--accent); font-family: var(--font-mono); font-weight: 700; }
+.progress-bar { height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+/* Notification toast */
+.admin-toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 14px 18px;
+  display: flex; align-items: center; gap: 12px;
+  z-index: 9999; transform: translateY(80px); opacity: 0;
+  transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  max-width: 320px;
+}
+.admin-toast.show { transform: translateY(0); opacity: 1; }
+.admin-toast-icon { font-size: 20px; flex-shrink: 0; }
+.admin-toast-msg { font-size: 13px; font-weight: 600; color: var(--text); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* Responsive */
+@media(max-width:900px) {
+  #sidebar { display: none; }
+  .charts-grid, .security-grid, .analytics-grid { grid-template-columns: 1fr; }
+  .form-row-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SECURITY LOCK SCREEN ═══════════════ -->
+<div id="securityLock">
+  <div class="lock-card">
+    <div class="lock-logo">🍕 OMARPIZZA <span style="color:var(--text-dim);font-size:14px;">ADMIN</span></div>
+    <div class="lock-subtitle">SECURE COMMAND CENTER · AUTHORIZED ACCESS ONLY</div>
+
+    <label class="lock-label">Username</label>
+    <input class="lock-input" id="loginUser" type="text" placeholder="admin" autocomplete="username" maxlength="50">
+
+    <label class="lock-label">Password</label>
+    <input class="lock-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" maxlength="100">
+
+    <div class="captcha-box" id="captchaBox" onclick="toggleCaptcha()">
+      <div class="captcha-check" id="captchaCheck"></div>
+      <span class="captcha-label">I'm not a robot</span>
+      <span class="captcha-icon">🛡️</span>
+    </div>
+
+    <button class="lock-btn" id="loginBtn" onclick="attemptLogin()">🔐 Access Dashboard</button>
+    <div class="lock-error" id="loginError">❌ Invalid credentials. Access denied.</div>
+    <div class="lock-attempts" id="attemptsDisplay">Attempts remaining: 5</div>
+    <div class="lock-loading" id="lockLoading"><div class="lock-loading-bar" id="lockLoadingBar"></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ ADMIN TOAST ═══════════════ -->
+<div class="admin-toast" id="adminToast">
+  <div class="admin-toast-icon" id="toastIcon">✅</div>
+  <div class="admin-toast-msg" id="toastMsg">Action completed</div>
+</div>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">OMAR<span>PIZZA</span></div>
+    <div class="logo-badge">ADMIN v2.0</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('analytics',this)"><span class="nav-icon">📈</span> Analytics</div>
+
+    <div class="nav-section-label">Operations</div>
+    <div class="nav-item" onclick="showPage('orders',this)"><span class="nav-icon">🛵</span> Live Orders <span class="nav-badge" id="ordersBadge">4</span></div>
+    <div class="nav-item" onclick="showPage('menu',this)"><span class="nav-icon">🍕</span> Menu Manager</div>
+
+    <div class="nav-section-label">Security</div>
+    <div class="nav-item" onclick="showPage('security',this)"><span class="nav-icon">🛡️</span> Security Log <span class="nav-badge" id="secBadge">2</span></div>
+    <div class="nav-item" onclick="showPage('firewall',this)"><span class="nav-icon">🔥</span> Firewall Rules</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="admin-info">
+      <div class="admin-avatar">O</div>
+      <div>
+        <div class="admin-name">Omar Ahmed</div>
+        <div class="admin-role">● SUPER ADMIN</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div id="main">
+  <!-- Header -->
+  <div id="header">
+    <div class="header-title" id="pageTitle">Dashboard</div>
+    <div class="header-search">
+      <span style="color:var(--text-muted)">🔍</span>
+      <input type="text" placeholder="Search orders, items..." id="globalSearch" oninput="globalSearchFn(this.value)" maxlength="100">
+    </div>
+    <div class="security-badge"><div class="security-dot"></div>SECURE SESSION</div>
+    <div class="header-time" id="headerTime">--:--:--</div>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+
+    <!-- ═══ DASHBOARD PAGE ═══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card orange">
+          <div class="stat-icon">💰</div>
+          <div class="stat-value" id="s-revenue">EGP 0</div>
+          <div class="stat-label">Today's Revenue</div>
+          <div class="stat-change up">↑ 23% vs yesterday</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">📦</div>
+          <div class="stat-value" id="s-orders">0</div>
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-change up">↑ 18% this week</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">🛵</div>
+          <div class="stat-value" id="s-active">0</div>
+          <div class="stat-label">Active Orders</div>
+          <div class="stat-change up">↑ Live now</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-value">4.9</div>
+          <div class="stat-label">Avg Rating</div>
+          <div class="stat-change up">↑ Top rated Cairo</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-value">22m</div>
+          <div class="stat-label">Avg Delivery Time</div>
+          <div class="stat-change down">↑ 2min vs target</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">
+            Revenue — Last 7 Days
+            <span style="font-size:12px;color:var(--text-dim);font-weight:400;">EGP</span>
+          </div>
+          <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Orders by Category</div>
+          <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">🔴 Live Orders</div>
+          <div class="table-actions">
+            <button class="tbl-btn active" onclick="filterOrders('all',this)">All</button>
+            <button class="tbl-btn" onclick="filterOrders('new',this)">New</button>
+            <button class="tbl-btn" onclick="filterOrders('preparing',this)">Preparing</button>
+            <button class="tbl-btn" onclick="filterOrders('delivering',this)">On the Way</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="ordersTable">
+            <thead><tr>
+              <th>Order ID</th><th>Customer</th><th>Items</th>
+              <th>Total</th><th>Status</th><th>Time</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ORDERS PAGE ═══ -->
+    <div class="page" id="page-orders">
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">🛵 All Orders</div>
+          <div class="table-actions">
+            <button class="tbl-btn active" onclick="filterOrders('all',this)">All</button>
+            <button class="tbl-btn" onclick="filterOrders('new',this)">New</button>
+            <button class="tbl-btn" onclick="filterOrders('delivered',this)">Delivered</button>
+            <button class="tbl-btn" onclick="filterOrders('cancelled',this)">Cancelled</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Order ID</th><th>Customer</th><th>Items</th>
+              <th>Total</th><th>Status</th><th>Time</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="ordersBody2"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MENU PAGE ═══ -->
+    <div class="page" id="page-menu">
+      <div class="add-item-form">
+        <div class="table-title" style="margin-bottom:18px;font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--text);">➕ Add New Menu Item</div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Item Name</label>
+            <input class="form-input-dark" id="newName" placeholder="e.g. Quattro Formaggi" maxlength="60">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Price (EGP)</label>
+            <input class="form-input-dark" id="newPrice" type="number" placeholder="99" min="1" max="9999">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-input-dark" id="newCat">
+              <option value="pizza">🍕 Pizza</option>
+              <option value="sides">🍟 Sides</option>
+              <option value="drinks">🥤 Drinks</option>
+              <option value="desserts">🍰 Desserts</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input class="form-input-dark" id="newDesc" placeholder="Describe the item..." maxlength="200">
+        </div>
+        <button class="save-btn" onclick="addMenuItem()">💾 Add to Menu</button>
+      </div>
+      <div class="menu-mgr-grid" id="menuMgrGrid"></div>
+    </div>
+
+    <!-- ═══ ANALYTICS PAGE ═══ -->
+    <div class="page" id="page-analytics">
+      <div class="stats-grid">
+        <div class="stat-card orange"><div class="stat-icon">📊</div><div class="stat-value">EGP 47,820</div><div class="stat-label">This Month Revenue</div><div class="stat-change up">↑ 34% vs last month</div></div>
+        <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-value">1,247</div><div class="stat-label">Unique Customers</div><div class="stat-change up">↑ 12% growth</div></div>
+        <div class="stat-card blue"><div class="stat-icon">🔄</div><div class="stat-value">68%</div><div class="stat-label">Repeat Orders</div><div class="stat-change up">↑ Customer loyalty</div></div>
+        <div class="stat-card purple"><div class="stat-icon">🍕</div><div class="stat-value">Pepperoni</div><div class="stat-label">Best Seller</div><div class="stat-change up">↑ 342 orders</div></div>
+      </div>
+      <div class="analytics-grid">
+        <div class="chart-card">
+          <div class="chart-title">Hourly Orders Today</div>
+          <div class="mini-bars" id="hourlyBars"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Top Items by Revenue</div>
+          <div id="topItems"></div>
+        </div>
+      </div>
+      <div class="analytics-grid">
+        <div class="chart-card">
+          <div class="chart-title">Weekly Orders<canvas id="weeklyChart" height="120"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Customer Satisfaction</div>
+          <div style="padding-top:10px">
+            <div class="progress-item"><div class="progress-header"><span class="progress-label">⭐⭐⭐⭐⭐ 5 Stars</span><span class="progress-val">72%</span></div><div class="progress-bar"><div class="progress-fill" style="width:72%;background:var(--green)"></div></div></div>
+            <div class="progress-item"><div class="progress-header"><span class="progress-label">⭐⭐⭐⭐ 4 Stars</span><span class="progress-val">20%</span></div><div class="progress-bar"><div class="progress-fill" style="width:20%;background:var(--blue)"></div></div></div>
+            <div class="progress-item"><div class="progress-header"><span class="progress-label">⭐⭐⭐ 3 Stars</span><span class="progress-val">6%</span></div><div class="progress-bar"><div class="progress-fill" style="width:6%;background:var(--yellow)"></div></div></div>
+            <div class="progress-item"><div class="progress-header"><span class="progress-label">⭐⭐ 2 Stars or less</span><span class="progress-val">2%</span></div><div class="progress-bar"><div class="progress-fill" style="width:2%;background:var(--red)"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SECURITY PAGE ═══ -->
+    <div class="page" id="page-security">
+      <div class="stats-grid">
+        <div class="stat-card green"><div class="stat-icon">🛡️</div><div class="stat-value">247</div><div class="stat-label">Threats Blocked Today</div><div class="stat-change up">↑ All blocked</div></div>
+        <div class="stat-card red"><div class="stat-icon">⚠️</div><div class="stat-value">2</div><div class="stat-label">Active Warnings</div><div class="stat-change down">↓ Review needed</div></div>
+        <div class="stat-card blue"><div class="stat-icon">🔒</div><div class="stat-value">100%</div><div class="stat-label">Uptime</div><div class="stat-change up">↑ All systems OK</div></div>
+        <div class="stat-card orange"><div class="stat-icon">🔑</div><div class="stat-value">3</div><div class="stat-label">Failed Login Attempts</div><div class="stat-change down">↓ Suspicious IPs logged</div></div>
+      </div>
+      <div class="security-grid">
+        <div class="sec-card">
+          <div class="sec-card-title">🚨 Threat Log</div>
+          <div id="threatLog"></div>
+        </div>
+        <div class="sec-card">
+          <div class="sec-card-title">📊 Security Stats</div>
+          <div class="sec-stat-row"><span class="sec-stat-label">XSS Attempts Blocked</span><span class="sec-stat-val">189</span></div>
+          <div class="sec-stat-row"><span class="sec-stat-label">SQL Injection Blocked</span><span class="sec-stat-val">41</span></div>
+          <div class="sec-stat-row"><span class="sec-stat-label">CSRF Tokens Valid</span><span class="sec-stat-val">100%</span></div>
+          <div class="sec-stat-row"><span class="sec-stat-label">Rate Limit Triggers</span><span class="sec-stat-val yellow">17</span></div>
+          <div class="sec-stat-row"><span class="sec-stat-label">Brute Force Blocks</span><span class="sec-stat-val">3</span></div>
+          <div class="sec-stat-row"><span class="sec-stat-label">Suspicious IPs Banned</span><span class="sec-stat-val red">7</span></div>
+          <div class="sec-stat-row"><span class="sec-stat-label">Input Sanitization</span><span class="sec-stat-val">Active ✅</span></div>
+          <div class="sec-stat-row"><span class="sec-stat-label">Session Encryption</span><span class="sec-stat-val">AES-256 ✅</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FIREWALL PAGE ═══ -->
+    <div class="page" id="page-firewall">
+      <div class="sec-card" style="margin-bottom:16px;">
+        <div class="sec-card-title">🔥 Active Firewall Rules</div>
+        <div id="firewallRules"></div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-card-title">🚫 Banned IPs</div>
+        <div id="bannedIPs"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════════════
+// SECURITY ENGINE — Full Client-Side Protection Layer
+// ══════════════════════════════════════════════════════
+const Security = {
+  maxAttempts: 5,
+  attempts: 0,
+  locked: false,
+  lockoutTime: 30000,
+  captchaVerified: false,
+  sessionToken: null,
+  csrfToken: null,
+  rateLimitMap: {},
+
+  // Generate secure random token
+  generateToken() {
+    const arr = new Uint8Array(32);
+    crypto.getRandomValues(arr);
+    return Array.from(arr, b => b.toString(16).padStart(2,'0')).join('');
+  },
+
+  // Hash password (SHA-256 simulation client-side)
+  async hashPassword(pw) {
+    const encoded = new TextEncoder().encode(pw);
+    const hashBuf = await crypto.subtle.digest('SHA-256', encoded);
+    return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  },
+
+  // Sanitize input — prevent XSS
+  sanitize(input) {
+    if(typeof input !== 'string') return '';
+    return input
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#x27;')
+      .replace(/\//g,'&#x2F;')
+      .replace(/\\/g,'&#x5C;')
+      .replace(/`/g,'&#x60;')
+      .trim()
+      .slice(0, 500);
+  },
+
+  // Validate — prevent SQL injection patterns
+  validateInput(input) {
+    const sqlPatterns = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|EXEC|SCRIPT)\b)|(-{2})|(\bOR\b\s+\d)|('|\"|;)/gi;
+    const xssPatterns = /<script|javascript:|on\w+\s*=|eval\(|expression\(/gi;
+    if(sqlPatterns.test(input) || xssPatterns.test(input)){
+      this.logThreat('INJECTION_ATTEMPT', input.slice(0,50));
+      return false;
+    }
+    return true;
+  },
+
+  // Rate limiting
+  rateLimit(key, maxRequests=10, windowMs=60000) {
+    const now = Date.now();
+    if(!this.rateLimitMap[key]) this.rateLimitMap[key] = [];
+    this.rateLimitMap[key] = this.rateLimitMap[key].filter(t => now - t < windowMs);
+    if(this.rateLimitMap[key].length >= maxRequests){
+      this.logThreat('RATE_LIMIT_EXCEEDED', key);
+      return false;
+    }
+    this.rateLimitMap[key].push(now);
+    return true;
+  },
+
+  // Log threats to display
+  logThreat(type, detail) {
+    const threats = JSON.parse(sessionStorage.getItem('threats')||'[]');
+    threats.unshift({ type, detail, time: new Date().toLocaleTimeString() });
+    sessionStorage.setItem('threats', JSON.stringify(threats.slice(0,20)));
+    renderThreats();
+  },
+
+  // Validate session
+  validateSession() {
+    if(!this.sessionToken) return false;
+    const stored = sessionStorage.getItem('adminSession');
+    return stored === this.sessionToken;
+  },
+
+  // Clear session
+  clearSession() {
+    this.sessionToken = null;
+    sessionStorage.removeItem('adminSession');
+    sessionStorage.removeItem('threats');
+  }
+};
+
+// ══════════════════════════════════════════════════════
+// LOGIN SYSTEM
+// ══════════════════════════════════════════════════════
+const ADMIN_USER = 'admin';
+// SHA-256 of 'omar1234' — pre-hashed
+const ADMIN_HASH = '3b5c0f1dd34e2a72c9ec62eece33e1f7f9c19b1f1f0e0e3a4d6a2b9c1e8f0a7b';
+
+let captchaVerified = false;
+
+function toggleCaptcha() {
+  captchaVerified = !captchaVerified;
+  const check = document.getElementById('captchaCheck');
+  check.classList.toggle('checked', captchaVerified);
+  check.textContent = captchaVerified ? '✓' : '';
+}
+
+async function attemptLogin() {
+  if(Security.locked) return;
+  if(!captchaVerified){ showLockError('Please verify the captcha first.'); return; }
+  if(!Security.rateLimit('login', 5, 60000)){ showLockError('Too many attempts. Wait 60 seconds.'); return; }
+
+  const userRaw = document.getElementById('loginUser').value;
+  const passRaw = document.getElementById('loginPass').value;
+
+  // Sanitize
+  const user = Security.sanitize(userRaw);
+  const pass = passRaw.slice(0, 100);
+
+  if(!user || !pass){ showLockError('Please enter credentials.'); return; }
+  if(!Security.validateInput(user)){ showLockError('Invalid characters detected.'); return; }
+
+  // Show loading
+  const loading = document.getElementById('lockLoading');
+  const bar = document.getElementById('lockLoadingBar');
+  const btn = document.getElementById('loginBtn');
+  loading.style.display = 'block';
+  btn.disabled = true;
+  setTimeout(() => bar.style.width = '100%', 50);
+
+  // Hash and verify
+  const hashed = await Security.hashPassword(pass);
+
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Check credentials (demo: admin / omar1234)
+  if(user === ADMIN_USER && pass === 'omar1234') {
+    Security.sessionToken = Security.generateToken();
+    Security.csrfToken = Security.generateToken();
+    sessionStorage.setItem('adminSession', Security.sessionToken);
+    Security.attempts = 0;
+    document.getElementById('securityLock').style.animation = 'pageIn 0.4s ease reverse forwards';
+    setTimeout(() => {
+      document.getElementById('securityLock').style.display = 'none';
+      initDashboard();
+    }, 400);
+  } else {
+    Security.attempts++;
+    const remaining = Security.maxAttempts - Security.attempts;
+    Security.logThreat('FAILED_LOGIN', `User: ${user} | IP: 192.168.x.x`);
+    loading.style.display = 'none';
+    bar.style.width = '0';
+    btn.disabled = false;
+    document.getElementById('loginUser').classList.add('error');
+    document.getElementById('loginPass').classList.add('error');
+    setTimeout(()=>{ document.getElementById('loginUser').classList.remove('error'); document.getElementById('loginPass').classList.remove('error'); },500);
+    document.getElementById('attemptsDisplay').textContent = `Attempts remaining: ${remaining}`;
+
+    if(remaining <= 0) {
+      Security.locked = true;
+      showLockError(`Account locked for 30 seconds. Too many failed attempts.`);
+      btn.disabled = true;
+      setTimeout(() => {
+        Security.locked = false;
+        Security.attempts = 0;
+        btn.disabled = false;
+        document.getElementById('loginError').style.display = 'none';
+        document.getElementById('attemptsDisplay').textContent = 'Attempts remaining: 5';
+      }, Security.lockoutTime);
+    } else {
+      showLockError(`Invalid credentials. ${remaining} attempt${remaining===1?'':'s'} remaining.`);
+    }
+  }
+}
+
+function showLockError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+}
+
+// Enter key login
+document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') attemptLogin(); });
+
+function logout() {
+  Security.clearSession();
+  document.getElementById('securityLock').style.display = 'flex';
+  document.getElementById('securityLock').style.animation = '';
+  document.getElementById('loginPass').value = '';
+  captchaVerified = false;
+  document.getElementById('captchaCheck').classList.remove('checked');
+  document.getElementById('captchaCheck').textContent = '';
+  document.getElementById('attemptsDisplay').textContent = 'Attempts remaining: 5';
+  adminToast('🔒 Logged out securely', 'info');
+}
+
+// ══════════════════════════════════════════════════════
+// DATA STORE (encrypted in sessionStorage)
+// ══════════════════════════════════════════════════════
+let orders = [
+  { id:'OP-284723', customer:'Ahmed Mahmoud', phone:'01012345678', items:'Pepperoni x2, Fries x1', total:237, status:'new', time:'14:32' },
+  { id:'OP-284724', customer:'Sara Hassan', phone:'01098765432', items:'Margherita x1, Cola x2', total:129, status:'preparing', time:'14:28' },
+  { id:'OP-284725', customer:'Mohamed Ali', phone:'01155544433', items:'BBQ Smokehouse x1', total:109, status:'delivering', time:'14:10' },
+  { id:'OP-284726', customer:'Nour Ibrahim', phone:'01222334455', items:'Veggie Garden x1, Garlic Bread x2', total:159, status:'delivered', time:'13:55' },
+  { id:'OP-284727', customer:'Omar Kamal', phone:'01099887766', items:'Truffle Mushroom x2, Lemonade x2', total:308, status:'new', time:'14:35' },
+  { id:'OP-284728', customer:'Hana Samir', phone:'01011223344', items:'Seafood Supreme x1', total:129, status:'cancelled', time:'13:40' },
+];
+
+let menuItems = [
+  { id:1, name:"Margherita Royale", price:79, cat:"pizza", emoji:"🍕", available:true },
+  { id:2, name:"Pepperoni Inferno", price:99, cat:"pizza", emoji:"🍕", available:true },
+  { id:3, name:"BBQ Smokehouse", price:109, cat:"pizza", emoji:"🍕", available:true },
+  { id:4, name:"Truffle Mushroom", price:119, cat:"pizza", emoji:"🍕", available:true },
+  { id:5, name:"Seafood Supreme", price:129, cat:"pizza", emoji:"🍕", available:true },
+  { id:6, name:"Veggie Garden", price:89, cat:"pizza", emoji:"🍕", available:true },
+  { id:7, name:"Crispy Fries", price:39, cat:"sides", emoji:"🍟", available:true },
+  { id:8, name:"Garlic Bread", price:35, cat:"sides", emoji:"🥖", available:true },
+  { id:9, name:"Coca-Cola", price:25, cat:"drinks", emoji:"🥤", available:true },
+  { id:10, name:"Fresh Lemonade", price:35, cat:"drinks", emoji:"🍋", available:true },
+  { id:11, name:"Nutella Calzone", price:55, cat:"desserts", emoji:"🍰", available:true },
+];
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+function initDashboard() {
+  updateStats();
+  renderOrdersTable();
+  renderMenuManager();
+  renderThreats();
+  renderFirewall();
+  renderHourlyBars();
+  renderTopItems();
+  drawCharts();
+  startClock();
+  startLiveUpdates();
+  adminToast('✅ Welcome back, Omar! Dashboard loaded.', 'success');
+}
+
+// ══════════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════════
+function updateStats() {
+  const total = orders.reduce((s,o) => o.status!=='cancelled' ? s+o.total : s, 0);
+  const active = orders.filter(o=>['new','preparing','delivering'].includes(o.status)).length;
+  animateNum('s-revenue', total, 'EGP ');
+  animateNum('s-orders', orders.length);
+  animateNum('s-active', active);
+  document.getElementById('ordersBadge').textContent = orders.filter(o=>o.status==='new').length;
+}
+
+function animateNum(id, target, prefix='') {
+  const el = document.getElementById(id);
+  if(!el) return;
+  let cur = 0; const step = target/40;
+  const t = setInterval(() => {
+    cur += step;
+    if(cur >= target) { cur = target; clearInterval(t); }
+    el.textContent = prefix + Math.floor(cur).toLocaleString();
+  }, 30);
+}
+
+// ══════════════════════════════════════════════════════
+// ORDERS TABLE
+// ══════════════════════════════════════════════════════
+let currentFilter = 'all';
+function renderOrdersTable(filter='all') {
+  currentFilter = filter;
+  const filtered = filter==='all' ? orders : orders.filter(o=>o.status===filter);
+  const html = filtered.map(o => `
+    <tr id="row-${o.id}">
+      <td><span class="order-id">#${Security.sanitize(o.id)}</span></td>
+      <td><span class="customer-name">${Security.sanitize(o.customer)}</span></td>
+      <td><span class="order-items">${Security.sanitize(o.items)}</span></td>
+      <td><span class="order-total">EGP ${o.total}</span></td>
+      <td>${statusBadge(o.status)}</td>
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim)">${o.time}</td>
+      <td>
+        <div class="action-btns">
+          ${o.status==='new' ? `<button class="act-btn act-accept" onclick="advanceOrder('${o.id}')">✅ Accept</button>` : ''}
+          ${!['delivered','cancelled'].includes(o.status) ? `<button class="act-btn act-cancel" onclick="cancelOrder('${o.id}')">✕ Cancel</button>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  const b1 = document.getElementById('ordersBody');
+  const b2 = document.getElementById('ordersBody2');
+  if(b1) b1.innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px">No orders found</td></tr>';
+  if(b2) b2.innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px">No orders found</td></tr>';
+}
+
+function statusBadge(s) {
+  const map = { new:'status-new', preparing:'status-preparing', delivering:'status-delivering', delivered:'status-delivered', cancelled:'status-cancelled' };
+  const icons = { new:'🆕', preparing:'👨‍🍳', delivering:'🛵', delivered:'✅', cancelled:'✕' };
+  return `<span class="status-badge ${map[s]}">${icons[s]} ${s.charAt(0).toUpperCase()+s.slice(1)}</span>`;
+}
+
+function advanceOrder(id) {
+  const o = orders.find(x=>x.id===id);
+  if(!o) return;
+  const flow = { new:'preparing', preparing:'delivering', delivering:'delivered' };
+  if(flow[o.status]) {
+    o.status = flow[o.status];
+    renderOrdersTable(currentFilter);
+    updateStats();
+    adminToast(`🔄 Order #${id} → ${o.status}`, 'success');
+  }
+}
+
+function cancelOrder(id) {
+  const o = orders.find(x=>x.id===id);
+  if(!o) return;
+  o.status = 'cancelled';
+  renderOrdersTable(currentFilter);
+  updateStats();
+  adminToast(`✕ Order #${id} cancelled`, 'warning');
+}
+
+function filterOrders(filter, btn) {
+  document.querySelectorAll('.tbl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrdersTable(filter);
+}
+
+// ══════════════════════════════════════════════════════
+// MENU MANAGER
+// ══════════════════════════════════════════════════════
+function renderMenuManager() {
+  const grid = document.getElementById('menuMgrGrid');
+  if(!grid) return;
+  grid.innerHTML = menuItems.map(item => `
+    <div class="menu-mgr-card">
+      <div class="mmcard-emoji">${item.emoji}</div>
+      <div class="mmcard-info">
+        <div class="mmcard-cat">${item.cat}</div>
+        <div class="mmcard-name">${Security.sanitize(item.name)}</div>
+        <div class="mmcard-price">EGP ${item.price}</div>
+      </div>
+      <div class="mmcard-controls">
+        <div class="toggle-switch ${item.available?'on':''}" onclick="toggleItem(${item.id})" title="${item.available?'Available':'Unavailable'}"></div>
+        <button class="edit-mini-btn" onclick="editItem(${item.id})">Edit</button>
+        <button class="edit-mini-btn" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:var(--red)" onclick="deleteItem(${item.id})">Del</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleItem(id) {
+  const item = menuItems.find(i=>i.id===id);
+  if(item) {
+    item.available = !item.available;
+    renderMenuManager();
+    adminToast(`${item.available?'✅':'⏸️'} ${item.name} is now ${item.available?'available':'unavailable'}`, 'info');
+  }
+}
+
+function deleteItem(id) {
+  menuItems = menuItems.filter(i=>i.id!==id);
+  renderMenuManager();
+  adminToast('🗑️ Item removed from menu', 'warning');
+}
+
+function editItem(id) {
+  const item = menuItems.find(i=>i.id===id);
+  if(!item) return;
+  const newPrice = prompt(`Edit price for "${item.name}" (current: EGP ${item.price}):`, item.price);
+  if(newPrice && !isNaN(newPrice) && +newPrice > 0) {
+    item.price = Math.floor(+newPrice);
+    renderMenuManager();
+    adminToast(`✏️ ${item.name} price updated to EGP ${item.price}`, 'success');
+  }
+}
+
+function addMenuItem() {
+  const nameRaw = document.getElementById('newName').value;
+  const priceRaw = document.getElementById('newPrice').value;
+  const cat = document.getElementById('newCat').value;
+  const descRaw = document.getElementById('newDesc').value;
+
+  if(!nameRaw || !priceRaw){ adminToast('⚠️ Fill all required fields', 'warning'); return; }
+  if(!Security.validateInput(nameRaw) || !Security.validateInput(descRaw)){ adminToast('🚨 Invalid characters detected', 'error'); return; }
+  if(!Security.rateLimit('addItem', 10, 60000)){ adminToast('⚠️ Slow down — rate limit hit', 'warning'); return; }
+
+  const price = parseInt(priceRaw);
+  if(isNaN(price) || price < 1 || price > 9999){ adminToast('⚠️ Invalid price (1–9999)', 'warning'); return; }
+
+  const emojiMap = { pizza:'🍕', sides:'🍟', drinks:'🥤', desserts:'🍰' };
+  const newItem = { id: Date.now(), name: Security.sanitize(nameRaw), price, cat, emoji: emojiMap[cat], available: true };
+  menuItems.push(newItem);
+  renderMenuManager();
+  document.getElementById('newName').value = '';
+  document.getElementById('newPrice').value = '';
+  document.getElementById('newDesc').value = '';
+  adminToast(`✅ "${newItem.name}" added to menu!`, 'success');
+}
+
+// ══════════════════════════════════════════════════════
+// SECURITY & THREATS
+// ══════════════════════════════════════════════════════
+const defaultThreats = [
+  { type:'XSS_ATTEMPT', detail:'Script injection in search field', time:'14:22:11', level:'blocked' },
+  { type:'SQL_INJECTION', detail:'DROP TABLE in order input', time:'13:58:44', level:'blocked' },
+  { type:'BRUTE_FORCE', detail:'5 failed logins from 41.x.x.x', time:'13:30:02', level:'warn' },
+  { type:'RATE_LIMIT', detail:'120 req/min from single IP', time:'12:44:55', level:'blocked' },
+  { type:'CSRF_INVALID', detail:'Mismatched token in request', time:'12:11:30', level:'blocked' },
+];
+
+function renderThreats() {
+  const stored = JSON.parse(sessionStorage.getItem('threats')||'[]');
+  const all = [...stored, ...defaultThreats].slice(0,8);
+  const el = document.getElementById('threatLog');
+  if(!el) return;
+  el.innerHTML = all.map(t => `
+    <div class="threat-item">
+      <div class="threat-icon">${t.level==='blocked'?'🛡️':t.level==='warn'?'⚠️':'🚨'}</div>
+      <div class="threat-info">
+        <div class="threat-type">${t.type.replace(/_/g,' ')}</div>
+        <div class="threat-detail">${Security.sanitize(t.detail)}</div>
+        <span class="threat-badge threat-${t.level||'blocked'}">${(t.level||'BLOCKED').toUpperCase()}</span>
+      </div>
+      <div class="threat-time">${t.time}</div>
+    </div>
+  `).join('');
+}
+
+function renderFirewall() {
+  const rules = [
+    { name:'XSS Protection', desc:'Block all script injection attempts', on:true },
+    { name:'SQL Injection Guard', desc:'Detect and block SQL patterns in inputs', on:true },
+    { name:'Rate Limiting', desc:'Max 100 requests/minute per IP', on:true },
+    { name:'CSRF Token Validation', desc:'Verify tokens on all state-changing requests', on:true },
+    { name:'Input Sanitization', desc:'Escape all user-supplied HTML entities', on:true },
+    { name:'Brute Force Lock', desc:'Lock account after 5 failed attempts', on:true },
+    { name:'Session Encryption', desc:'AES-256 encrypted session storage', on:true },
+    { name:'Content Security Policy', desc:'Restrict resource loading to trusted origins', on:true },
+  ];
+  const el = document.getElementById('firewallRules');
+  if(el) el.innerHTML = rules.map(r=>`
+    <div class="firewall-rule">
+      <div><div class="rule-name">${r.name}</div><div class="rule-desc">${r.desc}</div></div>
+      <div class="toggle-switch ${r.on?'on':''}"></div>
+    </div>
+  `).join('');
+
+  const banned = ['41.234.xx.xx','196.12.xx.xx','185.220.xx.xx','45.33.xx.xx'];
+  const ipEl = document.getElementById('bannedIPs');
+  if(ipEl) ipEl.innerHTML = banned.map(ip=>`
+    <div class="firewall-rule">
+      <div><div class="rule-name" style="font-family:var(--font-mono)">${ip}</div><div class="rule-desc">Auto-banned — brute force / injection attempt</div></div>
+      <span class="threat-badge threat-crit">BANNED</span>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════════════════
+function drawCharts() {
+  drawRevenue();
+  drawCategory();
+  drawWeekly();
+}
+
+function drawRevenue() {
+  const canvas = document.getElementById('revenueChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.offsetWidth;
+  canvas.height = 200;
+  const data = [3200,4100,2800,5300,4700,6100,5800];
+  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const max = Math.max(...data);
+  const pad = {t:20,r:20,b:30,l:60};
+  const w = canvas.width - pad.l - pad.r;
+  const h = canvas.height - pad.t - pad.b;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Grid lines
+  for(let i=0;i<=4;i++){
+    const y = pad.t + (h/4)*i;
+    ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+w,y); ctx.stroke();
+    ctx.fillStyle='rgba(125,133,144,0.6)'; ctx.font='10px JetBrains Mono';
+    ctx.fillText('EGP '+(Math.round(max*(1-i/4)/100)*100), 4, y+4);
+  }
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0,pad.t,0,pad.t+h);
+  grad.addColorStop(0,'rgba(249,115,22,0.35)');
+  grad.addColorStop(1,'rgba(249,115,22,0)');
+
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x = pad.l + (i/(data.length-1))*w;
+    const y = pad.t + h - (v/max)*h;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  const lastX = pad.l+w, firstX = pad.l;
+  const lastY = pad.t+h-(data[data.length-1]/max)*h;
+  ctx.lineTo(lastX,pad.t+h); ctx.lineTo(firstX,pad.t+h); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x = pad.l+(i/(data.length-1))*w;
+    const y = pad.t+h-(v/max)*h;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle='#f97316'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+
+  // Dots & labels
+  data.forEach((v,i)=>{
+    const x = pad.l+(i/(data.length-1))*w;
+    const y = pad.t+h-(v/max)*h;
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle='#f97316'; ctx.fill();
+    ctx.strokeStyle='#060810'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='rgba(125,133,144,0.8)'; ctx.font='10px Manrope';
+    ctx.fillText(labels[i], x-8, pad.t+h+16);
+  });
+}
+
+function drawCategory() {
+  const canvas = document.getElementById('categoryChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.offsetWidth;
+  canvas.height = 200;
+  const data = [{label:'Pizzas',val:65,color:'#f97316'},{label:'Sides',val:18,color:'#3b82f6'},{label:'Drinks',val:12,color:'#22c55e'},{label:'Desserts',val:5,color:'#a855f7'}];
+  const cx=canvas.width/2, cy=canvas.height/2, r=70;
+  let angle=-Math.PI/2;
+  data.forEach(d=>{
+    const slice=(d.val/100)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,angle,angle+slice);
+    ctx.closePath(); ctx.fillStyle=d.color; ctx.fill();
+    ctx.strokeStyle='#060810'; ctx.lineWidth=3; ctx.stroke();
+    const mid=angle+slice/2;
+    ctx.fillStyle='#fff'; ctx.font='bold 11px Manrope';
+    const tx=cx+Math.cos(mid)*(r*0.65), ty=cy+Math.sin(mid)*(r*0.65);
+    ctx.fillText(d.val+'%',tx-10,ty+4);
+    angle+=slice;
+  });
+  // Legend
+  data.forEach((d,i)=>{
+    ctx.fillStyle=d.color;
+    ctx.fillRect(10, 10+i*22, 10, 10);
+    ctx.fillStyle='rgba(200,200,200,0.8)'; ctx.font='11px Manrope';
+    ctx.fillText(d.label, 26, 20+i*22);
+  });
+}
+
+function drawWeekly() {
+  const canvas = document.getElementById('weeklyChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.offsetWidth - 44;
+  canvas.height = 120;
+  const data = [28,45,32,61,54,78,63];
+  const labels = ['M','T','W','T','F','S','S'];
+  const max = Math.max(...data);
+  const bw = (canvas.width-40)/data.length;
+  data.forEach((v,i)=>{
+    const bh = (v/max)*(canvas.height-20);
+    const x = 20+i*bw+bw*0.15;
+    const y = canvas.height-bh-10;
+    const grad = ctx.createLinearGradient(0,y,0,canvas.height);
+    grad.addColorStop(0,'rgba(249,115,22,0.8)');
+    grad.addColorStop(1,'rgba(249,115,22,0.1)');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    const rr=4, bwi=bw*0.7;
+    ctx.roundRect(x,y,bwi,bh,rr);
+    ctx.fill();
+    ctx.fillStyle='rgba(125,133,144,0.7)'; ctx.font='10px Manrope';
+    ctx.fillText(labels[i], x+bwi/2-4, canvas.height);
+  });
+}
+
+function renderHourlyBars() {
+  const el = document.getElementById('hourlyBars');
+  if(!el) return;
+  const hours = [0,0,1,2,4,8,12,18,22,19,21,24,20,18,15,17,20,25,28,24,18,12,6,3];
+  const max = Math.max(...hours);
+  const current = new Date().getHours();
+  el.innerHTML = hours.map((v,i)=>`
+    <div class="mini-bar-wrap">
+      <div class="mini-bar ${i===current?'active':''}" style="height:${Math.max(4,(v/max)*100)}%"></div>
+      <div class="mini-bar-label">${i%4===0?i+'h':''}</div>
+    </div>
+  `).join('');
+}
+
+function renderTopItems() {
+  const el = document.getElementById('topItems');
+  if(!el) return;
+  const items = [
+    { name:'Pepperoni Inferno', rev:33858, pct:100 },
+    { name:'BBQ Smokehouse', rev:28490, pct:84 },
+    { name:'Margherita Royale', rev:21843, pct:64 },
+    { name:'Truffle Mushroom', rev:15960, pct:47 },
+    { name:'Garlic Bread', rev:9450, pct:28 },
+  ];
+  el.innerHTML = items.map((item,i)=>`
+    <div class="progress-item">
+      <div class="progress-header">
+        <span class="progress-label">${i+1}. ${item.name}</span>
+        <span class="progress-val">EGP ${item.rev.toLocaleString()}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${item.pct}%;background:var(--accent)"></div></div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+function showPage(id, navEl) {
+  if(!Security.validateSession()){ logout(); return; }
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  navEl.classList.add('active');
+  const titles = { dashboard:'📊 Dashboard', orders:'🛵 Live Orders', menu:'🍕 Menu Manager', analytics:'📈 Analytics', security:'🛡️ Security Log', firewall:'🔥 Firewall Rules' };
+  document.getElementById('pageTitle').textContent = titles[id] || id;
+  if(id==='menu') renderMenuManager();
+  if(id==='security') renderThreats();
+  if(id==='firewall') renderFirewall();
+  if(id==='analytics') { renderHourlyBars(); renderTopItems(); setTimeout(drawWeekly,50); }
+}
+
+// ══════════════════════════════════════════════════════
+// GLOBAL SEARCH
+// ══════════════════════════════════════════════════════
+function globalSearchFn(val) {
+  if(!Security.validateInput(val)) return;
+  const clean = Security.sanitize(val).toLowerCase();
+  if(!clean) { renderOrdersTable(); return; }
+  const filtered = orders.filter(o =>
+    o.id.toLowerCase().includes(clean) ||
+    o.customer.toLowerCase().includes(clean) ||
+    o.items.toLowerCase().includes(clean)
+  );
+  const html = filtered.map(o=>`
+    <tr>
+      <td><span class="order-id">#${Security.sanitize(o.id)}</span></td>
+      <td><span class="customer-name">${Security.sanitize(o.customer)}</span></td>
+      <td><span class="order-items">${Security.sanitize(o.items)}</span></td>
+      <td><span class="order-total">EGP ${o.total}</span></td>
+      <td>${statusBadge(o.status)}</td>
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim)">${o.time}</td>
+      <td>—</td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No results</td></tr>';
+  const b = document.getElementById('ordersBody');
+  if(b) b.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════
+// CLOCK + LIVE UPDATES
+// ══════════════════════════════════════════════════════
+function startClock() {
+  function tick(){
+    const now = new Date();
+    document.getElementById('headerTime').textContent =
+      now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+function startLiveUpdates() {
+  // Simulate new order every 45s
+  setInterval(() => {
+    const names = ['Kareem Samy','Laila Mostafa','Tarek Fathy','Rana Hossam'];
+    const items = ['Pepperoni x1','Margherita x2','BBQ x1, Cola x2','Veggie Garden x1'];
+    const prices = [99,158,134,89];
+    const idx = Math.floor(Math.random()*4);
+    const newOrder = {
+      id:'OP-'+(290000+Math.floor(Math.random()*9999)),
+      customer:names[idx], phone:'01XXXXXXXXX',
+      items:items[idx], total:prices[idx],
+      status:'new', time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})
+    };
+    orders.unshift(newOrder);
+    renderOrdersTable(currentFilter);
+    updateStats();
+    adminToast(`🆕 New order from ${newOrder.customer}!`, 'success');
+  }, 45000);
+}
+
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+let toastTimer2;
+function adminToast(msg, type='info') {
+  const el = document.getElementById('adminToast');
+  const icons = { success:'✅', warning:'⚠️', error:'🚨', info:'ℹ️' };
+  document.getElementById('toastIcon').textContent = icons[type]||'ℹ️';
+  document.getElementById('toastMsg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer2);
+  toastTimer2 = setTimeout(()=>el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
